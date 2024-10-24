@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إحصائيات الدردشة - SAHL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>إحصائيات الدردشة</h1>
+        <form method="GET">
+            <label for="start_date">تاريخ البداية:</label>
+            <input type="date" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+
+            <label for="end_date">تاريخ النهاية:</label>
+            <input type="date" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+
+            <button type="submit">عرض الإحصائيات</button>
+        </form>
+
+        {% if stats %}
+        <h2>النتائج:</h2>
+        <p>عدد الجلسات: {{ stats[0] }}</p>
+        <p>إجمالي الرموز المميزة للإدخال: {{ stats[1] }}</p>
+        <p>إجمالي الرموز المميزة للإخراج: {{ stats[2] }}</p>
+        {% endif %}
+
+        <a href="{{ url_for('admin_dashboard') }}">العودة للوحة التحكم</a>
+    </div>
+</body>
+</html>

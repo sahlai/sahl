@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة Prompts - SAHL</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .history-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>إدارة Prompts - SAHL</h1>
+
+        <h2>الـ Prompt الحالي</h2>
+        <textarea id="currentPrompt" readonly></textarea>
+
+        <h2>تعديل الـ Prompt</h2>
+        <form id="promptForm">
+            <textarea id="newPrompt"></textarea>
+            <input type="text" id="comment" placeholder="تعليق على التغيير (اختياري)">
+            <button type="submit">حفظ التغييرات</button>
+        </form>
+
+        <h2>تاريخ الـ Prompts</h2>
+        <div id="promptHistory"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Load current prompt
+            $.get('/get_prompt', function(data) {
+                $('#currentPrompt').val(data.prompt);
+                $('#newPrompt').val(data.prompt);
+            });
+
+            // Load prompt history
+            function loadHistory() {
+                $.get('/get_prompt_history', function(data) {
+                    var historyHtml = '';
+                    data.history.forEach(function(item) {
+                        historyHtml += '<div class="history-item">';
+                        historyHtml += '<p>التاريخ: ' + item[2] + '</p>';
+                        historyHtml += '<p>التعليق: ' + item[3] + '</p>';
+                        historyHtml += '<button onclick="activateVersion(' + item[0] + ')">تفعيل هذا الإصدار</button>';
+                        historyHtml += '</div>';
+                    });
+                    $('#promptHistory').html(historyHtml);
+                });
+            }
+
+            loadHistory();
+
+            // Handle form submission
+            $('#promptForm').submit(function(e) {
+                e.preventDefault();
+                var newPrompt = $('#newPrompt').val();
+                var comment = $('#comment').val();
+
+                $.ajax({
+                    url: '/update_prompt',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({prompt: newPrompt, comment: comment}),
+                    success: function(response) {
+                        alert('تم تحديث الـ Prompt بنجاح');
+                        $('#currentPrompt').val(newPrompt);
+                        loadHistory();
+                    },
+                    error: function() {
+                        alert('حدث خطأ أثناء تحديث الـ Prompt');
+                    }
+                });
+            });
+        });
+
+        function activateVersion(versionId) {
+            $.ajax({
+                url: '/activate_prompt',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({version_id: versionId}),
+                success: function(response) {
+                    alert('تم تفعيل الإصدار بنجاح');
+                    location.reload();
+                },
+                error: function() {
+                    alert('حدث خطأ أثناء تفعيل الإصدار');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

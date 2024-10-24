@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سهل...حياتك أسهل 😃</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #chat-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            height: 400px;
+            overflow-y: scroll;
+        }
+        #user-input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        .assistant-message {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .user-message {
+            background-color: #e6f3ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>سهل...حياتك أسهل 😃</h1>
+    <div id="chat-container"></div>
+    <input type="text" id="user-input" placeholder="اكتب رسالتك هنا...">
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        function addMessage(sender, message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = sender === 'أنت' ? 'user-message' : 'assistant-message';
+            messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const message = userInput.value;
+                if (message.trim() !== '') {
+                    addMessage('أنت', message);
+                    fetch('/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({message: message}),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            addMessage('النظام', data.error);
+                        } else if (data.response) {
+                            addMessage('سهل', data.response);
+                        } else {
+                            addMessage('النظام', 'حدث خطأ غير متوقع. الرجاء المحاولة مرة أخرى.');
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        addMessage('النظام', 'حدث خطأ في الاتصال. الرجاء المحاولة مرة أخرى.');
+                    });
+                    userInput.value = '';
+                }
+            }
+        });
+        addMessage('سهل', 'مرحبًا بك في Sahlai! كيف يمكنني مساعدتك اليوم؟');
+    </script>
+</body>
+</html>

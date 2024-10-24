@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الخدمات - SAHL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <style>
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .service-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .service-item button {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>إدارة الخدمات</h1>
+        <form id="add-service-form" method="POST">
+            <input type="text" name="service_name" placeholder="اسم الخدمة" required>
+            <button type="submit">إضافة خدمة</button>
+        </form>
+        <h2>قائمة الخدمات الحالية:</h2>
+        <ul id="services-list">
+            {% for service in services %}
+            <li class="service-item">
+                <span class="service-name">{{ service.name }}</span>
+                <button onclick="editService({{ service.id }})">تعديل</button>
+                <button onclick="deleteService({{ service.id }})">حذف</button>
+                <label class="toggle-switch">
+                    <input type="checkbox" onchange="toggleService({{ service.id }})" {% if service.is_active %}checked{% endif %}>
+                    <span class="slider"></span>
+                </label>
+            </li>
+            {% endfor %}
+        </ul>
+        <a href="{{ url_for('admin_dashboard') }}">العودة للوحة التحكم</a>
+    </div>
+
+    <script>
+        function editService(id) {
+            const newName = prompt("أدخل الاسم الجديد للخدمة:");
+            if (newName) {
+                fetch(`/admin/services/${id}/edit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: newName }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('فشل تحديث الخدمة');
+                    }
+                });
+            }
+        }
+
+        function deleteService(id) {
+            if (confirm('هل أنت متأكد من حذف هذه الخدمة؟')) {
+                fetch(`/admin/services/${id}/delete`, {
+                    method: 'POST',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('فشل حذف الخدمة');
+                    }
+                });
+            }
+        }
+
+        function toggleService(id) {
+            fetch(`/admin/services/${id}/toggle`, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('فشل تغيير حالة الخدمة');
+                    location.reload();
+                }
+            });
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/admin_services.js') }}"></script>
+</body>
+</html>

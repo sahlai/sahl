@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المشرف - SAHL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="wrapper">
+        <nav class="sidebar">
+            <div class="menu-toggle">
+                <span>☰</span> <!-- أيقونة القائمة -->
+            </div>
+            <h2>SAHL</h2>
+            <ul>
+                <li><a href="{{ url_for('admin_countries') }}">الاماكن </a></li>
+                <li><a href="{{ url_for('admin_services') }}">إدارة الخدمات</a></li>
+                <li><a href="{{ url_for('admin_service_providers') }}">إدارة مقدمي الخدمات</a></li>
+                <li><a href="{{ url_for('admin_prompts') }}">إدارة الـ Prompts</a></li>
+                <li><a href="{{ url_for('admin_model_settings') }}">إعدادات النموذج</a></li>
+                <li><a href="{{ url_for('admin_chat_statistics') }}">إحصائيات الدردشة</a></li>
+                <li><a href="{{ url_for('backup_database') }}">نسخ احتياطي لقاعدة البيانات</a></li>
+            </ul>
+        </nav>
+        <div class="main-content">
+            <header>
+                <h1>لوحة تحكم المشرف</h1>
+            </header>
+            <section class="content">
+                <!-- هنا سيتم عرض المحتوى بناءً على الاختيار -->
+            </section>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+</body>
+</html>

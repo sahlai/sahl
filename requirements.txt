@@ -1,0 +1,7 @@
+flask
+langchain
+anthropic
+sentence-transformers
+faiss-cpu
+python-dotenv
+openai

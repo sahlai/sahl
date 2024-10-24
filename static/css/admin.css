@@ -1,0 +1,202 @@
+/* static/css/admin.css */
+
+/* إعدادات عامة */
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.wrapper {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background: #2c3e50;
+    padding: 15px;
+    color: #fff;
+    text-align: right;
+}
+
+.sidebar h2 {
+    text-align: center;
+    color: #fff;
+    margin-bottom: 20px;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    margin: 10px 0;
+}
+
+.sidebar ul li a {
+    color: #fff;
+    text-decoration: none;
+    padding: 10px;
+    display: block;
+    border-radius: 5px;
+}
+
+.sidebar ul li a:hover {
+    background: #34495e;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #ecf0f1;
+}
+
+header {
+    background: #3498db;
+    color: #fff;
+    padding: 15px 20px;
+    text-align: right;
+    border-radius: 5px;
+}
+
+.content {
+    margin-top: 20px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    min-height: 80vh;
+}
+/* ... باقي CSS ... */
+
+.sidebar {
+    width: 250px;
+    background: #2c3e50;
+    padding: 15px;
+    color: #fff;
+    text-align: right;
+    transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+    width: 60px;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+.sidebar ul li {
+    margin: 10px 0;
+}
+
+.sidebar ul li a {
+    color: #fff;
+    text-decoration: none;
+    padding: 10px;
+    display: block;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+    background: #34495e;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #ecf0f1;
+    transition: margin-left 0.3s ease;
+}
+
+.menu-toggle {
+    display: none;
+    cursor: pointer;
+    font-size: 30px;
+    padding: 10px;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: 250px;
+        transition: transform 0.3s ease;
+        transform: translateX(100%);
+    }
+
+    .sidebar.collapsed {
+        transform: translateX(0);
+    }
+
+    .menu-toggle {
+        display: block;
+        color: #fff;
+        position: absolute;
+        top: 15px;
+        right: 20px;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+}
+/* إعدادات العامة... */
+
+/* القائمة الجانبية */
+.sidebar {
+    width: 250px;
+    background: #2c3e50;
+    padding: 15px;
+    color: #fff;
+    text-align: right;
+    transition: transform 0.3s ease, width 0.3s ease;
+    position: relative; /* إضافة هذه الخاصية */
+}
+
+.sidebar.collapsed {
+    width: 60px;
+}
+
+.menu-toggle {
+    display: none;
+    cursor: pointer;
+    font-size: 30px;
+    padding: 10px;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: 250px;
+        transform: translateX(100%); /* البدء خارج الشاشة */
+    }
+
+    .sidebar.collapsed {
+        transform: translateX(0); /* العودة إلى الشاشة */
+    }
+
+    .menu-toggle {
+        display: block;
+        color: #fff;
+        position: absolute;
+        top: 15px;
+        right: 20px;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+}

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المدن - SAHL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>إدارة المدن للدولة: {{ country.name }}</h1>
+
+        <form id="add-city-form">
+            <input type="text" id="new-city-name" placeholder="اسم المدينة" required>
+            <button type="submit">إضافة مدينة</button>
+        </form>
+
+        <ul id="cities-list">
+            {% for city in cities %}
+            <li id="city-{{ city.id }}">
+                <span class="city-name">{{ city.name }}</span>
+                <span class="city-status">{{ 'مفعلة' if city.is_active else 'معطلة' }}</span>
+                <button class="edit-city" data-id="{{ city.id }}">تعديل</button>
+                <button class="toggle-status" data-id="{{ city.id }}">
+                    {% if city.is_active %}تعطيل{% else %}تفعيل{% endif %}
+                </button>
+                <button class="delete-city" data-id="{{ city.id }}">حذف</button>
+                <a href="{{ url_for('admin_districts_for_city', city_id=city.id) }}">إدارة الأحياء</a>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <a href="{{ url_for('admin_countries') }}">العودة لإدارة الدول</a>
+    </div>
+
+    <script>
+            $(document).ready(function() {
+    $('#add-city-form').submit(function(e) {
+        e.preventDefault();
+        var cityName = $('#new-city-name').val();
+        $.ajax({
+            url: "{{ url_for('admin_cities_for_country', country_id=country.id) }}",
+            method: 'POST',
+            data: { city_name: cityName },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    var newCity = response.city;
+                    var newCityHtml = `
+                        <li id="city-${newCity.id}">
+                            <span class="city-name">${newCity.name}</span>
+                            <span class="city-status">${newCity.is_active ? 'مفعلة' : 'معطلة'}</span>
+                            <button class="edit-city" data-id="${newCity.id}">تعديل</button>
+                            <button class="toggle-status" data-id="${newCity.id}">
+                                ${newCity.is_active ? 'تعطيل' : 'تفعيل'}
+                            </button>
+                            <button class="delete-city" data-id="${newCity.id}">حذف</button>
+                            <a href="/admin/cities/${newCity.id}/districts">إدارة الأحياء</a>
+                        </li>
+                    `;
+                    $('#cities-list').append(newCityHtml);
+                    $('#new-city-name').val('');
+                    alert('تمت إضافة المدينة بنجاح');
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function() {
+                alert('حدث خطأ أثناء إضافة المدينة');
+            }
+        });
+    });
+});
+
+            $('.edit-city').click(function() {
+                var cityId = $(this).data('id');
+                var cityName = $(this).siblings('.city-name').text();
+                var newName = prompt('أدخل الاسم الجديد للمدينة:', cityName);
+                if (newName) {
+                    $.post(`/admin/cities/${cityId}/update`, {
+                        city_name: newName
+                    }, function(response) {
+                        if (response.success) {
+                            $(`#city-${cityId} .city-name`).text(newName);
+                        } else {
+                            alert('فشل في تحديث المدينة');
+                        }
+                    });
+                }
+            });
+
+            $('.toggle-status').click(function() {
+                var cityId = $(this).data('id');
+                $.post(`/admin/cities/${cityId}/toggle_status`, function(response) {
+                    if (response.success) {
+                        var statusText = response.new_status ? 'مفعلة' : 'معطلة';
+                        var buttonText = response.new_status ? 'تعطيل' : 'تفعيل';
+                        $(`#city-${cityId} .city-status`).text(statusText);
+                        $(`#city-${cityId} .toggle-status`).text(buttonText);
+                    } else {
+                        alert('فشل في تغيير حالة المدينة');
+                    }
+                });
+            });
+
+            $('.delete-city').click(function() {
+                if (confirm('هل أنت متأكد من حذف هذه المدينة؟')) {
+                    var cityId = $(this).data('id');
+                    $.post("{{ url_for('admin_cities') }}", {
+                        action: 'delete',
+                        city_id: cityId
+                    }, function(response) {
+                        if (response.success) {
+                            $(`#city-${cityId}`).remove();
+                        } else {
+                            alert('فشل في حذف المدينة');
+                        }
+                    });
+                }
+            });
+        
+    </script>
+</body>
+</html>

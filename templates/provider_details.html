@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل مقدم الخدمة</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+            text-align: right;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        .card {
+            background: #fff;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .card p {
+            margin: 10px 0;
+            color: #555;
+            font-size: 16px;
+        }
+        .card img {
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+        }
+        .card button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .card button:hover {
+            background: #0056b3;
+        }
+        .edit-form {
+            display: none;
+        }
+        .edit-form input[type="text"],
+        .edit-form input[type="file"],
+        .edit-form input[type="tel"] {
+            padding: 10px;
+            width: 100%;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .btn-group {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .btn-group button {
+            background: #28a745;
+        }
+        .btn-group button.cancel {
+            background: #dc3545;
+        }
+        .service-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+</head>
+<body>
+    <div class="container">
+       
+        <div class="card">
+            <h2>الخدمات المقدمة</h2>
+            {% for service in provider.services %}
+                <div class="service-card">
+                    <h3>{{ service.name }}</h3>
+                    <p>التفاصيل: {{ ', '.join(service.details) if service.details else 'لا توجد تفاصيل' }}</p>
+                    <p>الخدمات غير المتوفرة: {{ ', '.join(service.non_provided) if service.non_provided else 'لا توجد' }}</p>
+        
+                    <h4>المناطق المغطاة:</h4>
+{% for country, cities in service.areas.items() %}
+    <h5>الدولة: {{ country }}</h5>
+    {% for city, districts in cities.items() %}
+        <p><strong>المدينة:</strong> {{ city }}</p>
+        <ul>
+            {% for district in districts %}
+                <li>{{ district }}</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+{% else %}
+    <p>لا توجد مناطق محددة لهذه الخدمة</p>
+{% endfor %}
+                    <h4>أوقات العمل:</h4>
+                    {% if service.working_hours.is_24_hours %}
+                        <p>مواعيد العمل: 24 ساعة</p>
+                        {% if service.working_hours.working_days %}
+                            <p>أيام العمل:</p>
+                            <ul>
+                                {% for day in service.working_hours.working_days %}
+                                    <li>{{ day }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% elif service.working_hours.schedules %}
+                        {% for schedule in service.working_hours.schedules %}
+                            <p>
+                                من الساعة {{ schedule.start_time }} إلى {{ schedule.end_time }}
+                            </p>
+                            {% if schedule.days %}
+                                <p>أيام العمل:</p>
+                                <ul>
+                                    {% for day in schedule.days %}
+                                        <li>{{ day }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p>لم يتم تحديد أوقات عمل</p>
+                    {% endif %}
+                    <!-- عرض التقييمات -->
+                    <p>متوسط التقييمات: {{ service.average_rating if service.average_rating is not none else 'لا يوجد تقييمات' }}</p>
+                    <p>عدد التقييمات: {{ service.rating_count if service.rating_count is not none else '0' }}</p>
+
+                    <button onclick="editService('{{ service.id }}')">تعديل الخدمة</button>
+                    <button onclick="deleteService('{{ service.id }}')">حذف الخدمة</button>
+                    <button onclick="toggleServiceStatus('{{ service.id }}')">
+                        {% if service.is_active %}تعطيل{% else %}تفعيل{% endif %}
+                    </button>
+                </div>
+            {% endfor %}
+            <button onclick="addNewService()">إضافة خدمة جديدة</button>
+        </div>
+        
+        
+    <script>
+        const phoneInput = document.querySelector("#phone-input");
+        const whatsappInput = document.querySelector("#whatsapp-input");
+
+        const phoneInputInstance = window.intlTelInput(phoneInput, {
+            initialCountry: "eg",
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
+        });
+
+        const whatsappInputInstance = window.intlTelInput(whatsappInput, {
+            initialCountry: "eg",
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
+        });
+
+        function validatePhoneNumbers() {
+            return phoneInputInstance.isValidNumber() && whatsappInputInstance.isValidNumber();
+        }
+
+        function validateEmail(email) {
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailPattern.test(email);
+        }
+
+        function saveInfo() {
+            const provider_id = "{{ provider.id }}";
+            const name = document.getElementById('name-input').value;
+            const phone = document.getElementById('phone-input').value;
+            const whatsapp = document.getElementById('whatsapp-input').value;
+            const email = document.getElementById('email-input').value;
+
+            if (!validatePhoneNumbers()) {
+                alert("أرقام الهواتف غير صالحة");
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                alert("البريد الإلكتروني غير صالح");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append('provider_id', provider_id);
+            formData.append('name', name);
+            formData.append('phone', phoneInputInstance.getNumber());
+            formData.append('whatsapp', whatsappInputInstance.getNumber());
+            formData.append('email', email);
+
+            const profilePicture = document.getElementById('profile_picture-input').files[0];
+            if (profilePicture) {
+                formData.append('profile_picture', profilePicture);
+            }
+
+            fetch('/admin/update_provider', {
+                method: 'POST',
+                            body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("تم حفظ التعديلات بنجاح");
+                    document.getElementById('name-text').innerText = name;
+                    document.getElementById('phone-text').innerText = phoneInputInstance.getNumber();
+                    document.getElementById('whatsapp-text').innerText = whatsappInputInstance.getNumber();
+                    document.getElementById('email-text').innerText = email;
+
+                    document.querySelector('.display-info').style.display = 'block';
+                    document.querySelector('.edit-form').style.display = 'none';
+                } else {
+                    alert("حدث خطأ أثناء الحفظ: " + data.message);
+                }
+            })
+            .catch(error => {
+                alert("فشل الاتصال بالخادم: " + error);
+            });
+        }
+
+        function editInfo() {
+            document.querySelector('.display-info').style.display = 'none';
+            document.querySelector('.edit-form').style.display = 'block';
+        }
+
+        function cancelEdit() {
+            document.querySelector('.display-info').style.display = 'block';
+            document.querySelector('.edit-form').style.display = 'none';
+        }
+
+        function resetPassword() {
+            alert("تم إرسال رابط إعادة تعيين كلمة المرور إلى البريد الإلكتروني الخاص بك.");
+                   
+        }
+
+        function editService(serviceIndex) {
+            // تنفيذ منطق تعديل الخدمة هنا
+            console.log("تعديل الخدمة رقم:", serviceIndex);
+        }
+
+        function deleteService(serviceIndex) {
+            if (confirm("هل أنت متأكد من حذف هذه الخدمة؟")) {
+                // تنفيذ منطق حذف الخدمة هنا
+                console.log("حذف الخدمة رقم:", serviceIndex);
+            }
+        }
+
+        function toggleServiceStatus(serviceIndex) {
+            // تنفيذ منطق تغيير حالة الخدمة هنا
+            console.log("تغيير حالة الخدمة رقم:", serviceIndex);
+        }
+
+        function addNewService() {
+            window.location.href = `/admin/add_service/{{ provider.id }}`;
+        }
+        $('.select-all-districts').click(function() {
+    var cityId = $(this).data('city-id');
+    var select = $('select[name="district_id[' + cityId + '][]"]');
+    if (select.val() && select.val().length === select.find('option').length - 1) {
+        // إذا كانت جميع الأحياء محددة، قم بإلغاء تحديدها
+        select.val(null).trigger('change');
+        $(this).text('اختيار جميع الأحياء');
+    } else {
+        // قم بتحديد جميع الأحياء
+        select.find('option').prop('selected', true);
+        select.trigger('change');
+        $(this).text('إلغاء تحديد الجميع');
+    }
+});
+
+    </script>
+</body>
+</html>

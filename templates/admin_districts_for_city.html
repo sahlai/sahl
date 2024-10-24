@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الأحياء - SAHL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>إدارة الأحياء للمدينة: {{ city.name }}</h1>
+
+        <form id="add-district-form">
+            <input type="text" id="new-district-name" placeholder="اسم الحي" required>
+            <button type="submit">إضافة حي</button>
+        </form>
+
+        <ul id="districts-list">
+            {% for district in districts %}
+            <li id="district-{{ district.id }}">
+                <span class="district-name">{{ district.name }}</span>
+                <span class="district-status">{{ 'مفعل' if district.is_active else 'معطل' }}</span>
+                <button class="edit-district" data-id="{{ district.id }}">تعديل</button>
+                <button class="toggle-status" data-id="{{ district.id }}">
+                    {% if district.is_active %}تعطيل{% else %}تفعيل{% endif %}
+                </button>
+                <button class="delete-district" data-id="{{ district.id }}">حذف</button>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <a href="{{ url_for('admin_cities_for_country', country_id=city.country_id) }}">العودة لإدارة المدن</a>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#add-district-form').submit(function(e) {
+                e.preventDefault();
+                var districtName = $('#new-district-name').val();
+                $.post("/admin/districts/add", {
+                    district_name: districtName,
+                    city_id: {{ city.id }}
+                }, function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('فشل في إضافة الحي');
+                    }
+                });
+            });
+
+            $('.edit-district').click(function() {
+                var districtId = $(this).data('id');
+                var districtName = $(this).siblings('.district-name').text();
+                var newName = prompt('أدخل الاسم الجديد للحي:', districtName);
+                if (newName) {
+                    $.post(`/admin/districts/${districtId}/update`, {
+                        district_name: newName
+                    }, function(response) {
+                        if (response.success) {
+                            $(`#district-${districtId} .district-name`).text(newName);
+                        } else {
+                            alert('فشل في تحديث الحي');
+                        }
+                    });
+                }
+            });
+
+            $('.toggle-status').click(function() {
+                var districtId = $(this).data('id');
+                $.post(`/admin/districts/${districtId}/toggle_status`, function(response) {
+                    if (response.success) {
+                        var statusText = response.new_status ? 'مفعل' : 'معطل';
+                        var buttonText = response.new_status ? 'تعطيل' : 'تفعيل';
+                        $(`#district-${districtId} .district-status`).text(statusText);
+                        $(`#district-${districtId} .toggle-status`).text(buttonText);
+                    } else {
+                        alert('فشل في تغيير حالة الحي');
+                    }
+                });
+            });
+
+            $('.delete-district').click(function() {
+                if (confirm('هل أنت متأكد من حذف هذا الحي؟')) {
+                    var districtId = $(this).data('id');
+                    $.post(`/admin/districts/${districtId}/delete`, function(response) {
+                        if (response.success) {
+                            $(`#district-${districtId}`).remove();
+                        } else {
+                            alert('فشل في حذف الحي');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

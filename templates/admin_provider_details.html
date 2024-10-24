@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل مقدم الخدمة</title>
+</head>
+<body>
+    <h1>تفاصيل مقدم الخدمة: {{ provider.name }}</h1>
+
+    <p><strong>الاسم:</strong> {{ provider.name }}</p>
+    <p><strong>البريد الإلكتروني:</strong> {{ provider.email }}</p>
+    <p><strong>رقم الجوال:</strong> {{ provider.phone }}</p>
+    <p><strong>الخدمات المقدمة:</strong> {{ provider.services | join(', ') }}</p>
+    <p><strong>المدن:</strong> {{ provider.cities | join(', ') }}</p>
+    <p><strong>الحالة:</strong> {% if provider.is_active %}مفعل{% else %}معطل{% endif %}</p>
+
+    <button onclick="window.location.href='{{ url_for('admin_service_providers') }}'">عودة إلى قائمة مقدمى الخدمات</button>
+
+</body>
+</html>

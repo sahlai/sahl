@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الدول - SAHL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>إدارة الدول</h1>
+
+        <!-- نموذج إضافة دولة جديدة -->
+        <form id="add-country-form" method="POST" action="{{ url_for('admin_countries') }}">
+            <input type="hidden" name="action" value="add">
+            <input type="text" name="country_name" placeholder="اسم الدولة" required>
+            <button type="submit">إضافة دولة</button>
+        </form>
+
+        <!-- قائمة الدول -->
+        <ul id="countries-list">
+            {% for country in countries %}
+            <li id="country-{{ country.id }}">
+                <span class="country-name">{{ country.name }}</span>
+                <span class="country-status">{{ 'مفعلة' if country.is_active else 'معطلة' }}</span>
+                <button class="edit-country" data-id="{{ country.id }}">تعديل</button>
+                <button class="toggle-status" data-id="{{ country.id }}" data-status="{{ country.is_active }}">
+                    {% if country.is_active %}تعطيل{% else %}تفعيل{% endif %}
+                </button>
+                <button class="delete-country" data-id="{{ country.id }}">حذف</button>
+                <a href="{{ url_for('admin_cities_for_country', country_id=country.id) }}">إدارة المدن</a>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <!-- نموذج تعديل الدولة (مخفي بشكل افتراضي) -->
+        <form id="edit-country-form" style="display: none;">
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" id="edit-country-id" name="country_id">
+            <input type="text" id="edit-country-name" name="country_name" required>
+            <button type="submit">حفظ التغييرات</button>
+            <button type="button" id="cancel-edit">إلغاء</button>
+        </form>
+
+        <a href="{{ url_for('admin_dashboard') }}">العودة للوحة التحكم</a>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // تفعيل نموذج التعديل عند الضغط على زر التعديل
+            $('.edit-country').click(function() {
+                var countryId = $(this).data('id');
+                var countryName = $(this).siblings('.country-name').text();
+                $('#edit-country-id').val(countryId);
+                $('#edit-country-name').val(countryName);
+                $('#edit-country-form').show();
+            });
+
+            // إلغاء التعديل وإخفاء النموذج
+            $('#cancel-edit').click(function() {
+                $('#edit-country-form').hide();
+            });
+
+            // إرسال نموذج التعديل عبر Ajax
+            $('#edit-country-form').submit(function(e) {
+                e.preventDefault();
+                var countryId = $('#edit-country-id').val();
+                var newName = $('#edit-country-name').val();
+                $.ajax({
+                    url: "{{ url_for('admin_countries') }}",
+                    method: 'POST',
+                    data: { action: 'update', country_id: countryId, country_name: newName },
+                    success: function(response) {
+                        $('#country-' + countryId + ' .country-name').text(newName);
+                        $('#edit-country-form').hide();
+                        alert('تم تحديث الدولة بنجاح');
+                    },
+                    error: function() {
+                        alert('حدث خطأ أثناء تحديث الدولة');
+                    }
+                });
+            });
+
+            // تغيير حالة التفعيل
+            $('.toggle-status').click(function() {
+                var countryId = $(this).data('id');
+                var isActive = $(this).data('status');
+                $.ajax({
+                    url: "{{ url_for('admin_countries') }}",
+                    method: 'POST',
+                    data: { action: 'toggle_status', country_id: countryId },
+                    success: function(response) {
+                        var newStatus = !isActive;
+                        var $button = $('#country-' + countryId + ' .toggle-status');
+                        $button.data('status', newStatus);
+                        $button.text(newStatus ? 'تعطيل' : 'تفعيل');
+                        $('#country-' + countryId + ' .country-status').text(newStatus ? 'مفعلة' : 'معطلة');
+                        alert('تم تغيير حالة الدولة بنجاح');
+                    },
+                    error: function() {
+                        alert('حدث خطأ أثناء تغيير حالة الدولة');
+                    }
+                });
+            });
+
+            // حذف الدولة
+            $('.delete-country').click(function() {
+                if (confirm('هل أنت متأكد من حذف هذه الدولة؟')) {
+                    var countryId = $(this).data('id');
+                    $.ajax({
+                        url: "{{ url_for('admin_countries') }}",
+                        method: 'POST',
+                        data: { action: 'delete', country_id: countryId },
+                        success: function(response) {
+                            $('#country-' + countryId).remove();
+                            alert('تم حذف الدولة بنجاح');
+                        },
+                        error: function() {
+                            alert('حدث خطأ أثناء حذف الدولة');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
